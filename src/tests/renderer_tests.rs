@@ -170,8 +170,10 @@ mod dirty {
 
     #[test]
     fn scroll_triggers_chat_redraw() {
-        let mut r = Renderer::new().unwrap();
-        // Enough lines to overflow the (fallback 80x24) viewport.
+        // Fixed geometry: `Renderer::new()` queries the real terminal, so the
+        // 40-line feed only overflows when the host terminal is short enough.
+        let mut r = Renderer::with_backend(Box::new(crate::ui::renderer::FakeBackend::new(80, 24)));
+        // Enough lines to overflow the 80x24 viewport (24 - input - statusline).
         for i in 0..40 {
             r.feed_mut()
                 .push_line(BlockStyle::Plain, format!("line {i}"));

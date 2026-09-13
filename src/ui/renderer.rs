@@ -1513,7 +1513,6 @@ impl Renderer {
                         if have_run && selected != run_selected {
                             self.write_input_run(&run, run_selected)?;
                             run.clear();
-                            have_run = false;
                         }
                         run_selected = selected;
                         have_run = true;
@@ -1682,18 +1681,17 @@ pub fn paste_from_clipboard() -> anyhow::Result<String> {
             return Ok(String::from_utf8_lossy(&output.stdout).to_string());
         }
     }
-    if cfg!(windows) {
-        if let Ok(output) = std::process::Command::new("powershell")
+    if cfg!(windows)
+        && let Ok(output) = std::process::Command::new("powershell")
             .args(["-NoProfile", "-Command", "Get-Clipboard"])
             .stdin(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .output()
-            && output.status.success()
-        {
-            let text = String::from_utf8_lossy(&output.stdout);
-            // Get-Clipboard appends the console line terminator.
-            return Ok(text.trim_end_matches(['\r', '\n']).to_string());
-        }
+        && output.status.success()
+    {
+        let text = String::from_utf8_lossy(&output.stdout);
+        // Get-Clipboard appends the console line terminator.
+        return Ok(text.trim_end_matches(['\r', '\n']).to_string());
     }
     anyhow::bail!("no clipboard tool found (tried wl-paste, xclip, pbpaste)")
 }
